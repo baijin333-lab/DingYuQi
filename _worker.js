@@ -15,10 +15,10 @@ let subConfig = atob('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NtbGl1L0FDTD
 let subProtocol = 'https';
 let noTLS = 'false';
 let link;
-let 隧道版本作者 = 'cmliu';
-let 获取代理IP = 'true';
+let 隧道版本作者 = atob('ZWQ=');
+let 获取代理IP;
 let proxyIPs = [
-	atob('a3Iud2lsbGlhbS51cy5jaQ=='),
+	atob('cHJveHlpcC5meHhrLmRlZHluLmlv'),
 ];
 let 匹配PROXYIP = [];
 let socks5DataURL = '';
@@ -28,7 +28,7 @@ let 临时中转域名 = [];
 let 临时中转域名接口 = '';
 let EndPS = '';
 let 协议类型 = atob(`\u0056\u006b\u0078\u0046\u0055\u0031\u004d\u003d`);
-let FileName = '优选订阅';
+let FileName = '优选订阅生成器';
 let SUBUpdateTime = 6;
 let total = 24;
 let timestamp = 4102329600000;
@@ -146,10 +146,10 @@ async function 整理测速结果(tls) {
 	// CSV解析函数
 	function parseCSV(text) {
 		return text
-			.replace(/\r\n/g, '\n')
-			.replace(/\r/g, '\n')
-			.split('\n')
-			.filter(line => line.trim() !== '')
+			.replace(/\r\n/g, '\n')   // 统一Windows换行
+			.replace(/\r/g, '\n')	 // 处理老Mac换行
+			.split('\n')			   // 按Unix/Linux风格分割
+			.filter(line => line.trim() !== '')  // 移除空行
 			.map(line => line.split(',').map(cell => cell.trim()));
 	}
 
@@ -203,6 +203,7 @@ async function 整理测速结果(tls) {
 	const results = await Promise.all(csvPromises);
 	return results.flat();
 }
+
 
 async function 整理(内容) {
 	// 将制表符、双引号、单引号和换行符都替换为逗号
@@ -1046,7 +1047,7 @@ export default {
 			sni = env.SNI || host;
 			type = env.TYPE || type;
 			隧道版本作者 = env.ED || 隧道版本作者;
-			获取代理IP = env.RPROXYIP || 获取代理IP;
+			获取代理IP = env.RPROXYIP || 'false';
 
 			if (host == "null" || uuid == "null") {
 				let 空字段;
@@ -1069,7 +1070,7 @@ export default {
 			xhttp = (mode ? `&mode=${mode}` : "") + (extra ? `&extra=${encodeURIComponent(extra)}` : "");
 			alpn = url.searchParams.get('alpn') || (xhttp ? "h3%2Ch2" : alpn);
 			隧道版本作者 = url.searchParams.get(atob('ZWRnZXR1bm5lbA==')) || url.searchParams.get(atob('ZXBlaXVz')) || 隧道版本作者;
-			获取代理IP = url.searchParams.get('proxyip') || 获取代理IP;
+			获取代理IP = url.searchParams.get('proxyip') || 'false';
 
 			if (url.searchParams.has('alterid')) {
 				协议类型 = 'VMess';
