@@ -15,10 +15,10 @@ let subConfig = atob('aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL2NtbGl1L0FDTD
 let subProtocol = 'https';
 let noTLS = 'false';
 let link;
-let 隧道版本作者 = atob('ZWQ=');
-let 获取代理IP;
+let 隧道版本作者 = 'cmliu';
+let 获取代理IP = 'true';
 let proxyIPs = [
-	atob('cHJveHlpcC5meHhrLmRlZHluLmlv'),
+	atob('a3Iud2lsbGlhbS51cy5jaQ=='),
 ];
 let 匹配PROXYIP = [];
 let socks5DataURL = '';
@@ -28,7 +28,7 @@ let 临时中转域名 = [];
 let 临时中转域名接口 = '';
 let EndPS = '';
 let 协议类型 = atob(`\u0056\u006b\u0078\u0046\u0055\u0031\u004d\u003d`);
-let FileName = '优选订阅生成器';
+let FileName = '优选订阅';
 let SUBUpdateTime = 6;
 let total = 24;
 let timestamp = 4102329600000;
@@ -1046,7 +1046,7 @@ export default {
 			sni = env.SNI || host;
 			type = env.TYPE || type;
 			隧道版本作者 = env.ED || 隧道版本作者;
-			获取代理IP = env.RPROXYIP || 'false';
+			获取代理IP = env.RPROXYIP || 获取代理IP;
 
 			if (host == "null" || uuid == "null") {
 				let 空字段;
@@ -1069,7 +1069,7 @@ export default {
 			xhttp = (mode ? `&mode=${mode}` : "") + (extra ? `&extra=${encodeURIComponent(extra)}` : "");
 			alpn = url.searchParams.get('alpn') || (xhttp ? "h3%2Ch2" : alpn);
 			隧道版本作者 = url.searchParams.get(atob('ZWRnZXR1bm5lbA==')) || url.searchParams.get(atob('ZXBlaXVz')) || 隧道版本作者;
-			获取代理IP = url.searchParams.get('proxyip') || 'false';
+			获取代理IP = url.searchParams.get('proxyip') || 获取代理IP;
 
 			if (url.searchParams.has('alterid')) {
 				协议类型 = 'VMess';
