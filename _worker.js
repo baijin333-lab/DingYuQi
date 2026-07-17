@@ -169,16 +169,19 @@ async function 整理测速结果(tls) {
 			const [header, ...dataRows] = rows;
 
 			// result_top10_combined.csv 格式：
-			// IP地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码,端口
+			// 表头: IP 地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码 (7列)
+			// 数据: IP 地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码,端口 (8列)
 			return dataRows
 				.filter(row => {
-					if (row.length < 8) return false;
+					// 兼容表头7列、数据8列的情况
+					if (row.length < 7) return false;
 					const speed = parseFloat(row[5]);
 					return !isNaN(speed) && speed > DLS;
 				})
 				.map(row => {
 					const ipAddress = row[0];
-					const port = row[7];
+					// 如果数据有8列，端口在第8列(索引7)；如果只有7列，默认端口443
+					const port = row.length >= 8 ? row[7] : '443';
 					const dataCenter = row[6];
 					const speed = parseFloat(row[5]).toFixed(2);
 					const delay = parseFloat(row[4]).toFixed(1);
