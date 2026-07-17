@@ -146,10 +146,10 @@ async function 整理测速结果(tls) {
 	// CSV解析函数
 	function parseCSV(text) {
 		return text
-			.replace(/\r\n/g, '\n')   // 统一Windows换行
-			.replace(/\r/g, '\n')	 // 处理老Mac换行
-			.split('\n')			   // 按Unix/Linux风格分割
-			.filter(line => line.trim() !== '')  // 移除空行
+			.replace(/\r\n/g, '\n')
+			.replace(/\r/g, '\n')
+			.split('\n')
+			.filter(line => line.trim() !== '')
 			.map(line => line.split(',').map(cell => cell.trim()));
 	}
 
@@ -165,30 +165,26 @@ async function 整理测速结果(tls) {
 			const text = await response.text();
 			const rows = parseCSV(text);
 
-			// 解构和验证CSV头部
+			// 解构CSV头部和数据行
 			const [header, ...dataRows] = rows;
-			const tlsIndex = header.findIndex(col => col.toUpperCase() === 'TLS');
 
-			if (tlsIndex === -1) {
-				throw new Error('CSV文件缺少必需的字段');
-			}
-
+			// result_top10_combined.csv 格式：
+			// IP地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码,端口
 			return dataRows
 				.filter(row => {
-					const tlsValue = row[tlsIndex].toUpperCase();
-					const speed = parseFloat(row[row.length - 1]);
-					return tlsValue === tls.toUpperCase() && speed > DLS;
+					if (row.length < 8) return false;
+					const speed = parseFloat(row[5]);
+					return !isNaN(speed) && speed > DLS;
 				})
 				.map(row => {
 					const ipAddress = row[0];
-					const port = row[1];
-					const dataCenter = row[tlsIndex + remarkIndex];
-					const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
+					const port = row[7];
+					const dataCenter = row[6];
+					const speed = parseFloat(row[5]).toFixed(2);
+					const delay = parseFloat(row[4]).toFixed(1);
+					const formattedAddress = `${ipAddress}:${port}#${dataCenter}[${speed}MB/s|${delay}ms]`;
 
-					// 处理代理IP池
-					if (csvUrl.includes('proxyip=true') &&
-						row[tlsIndex].toUpperCase() === 'TRUE' &&
-						!httpsPorts.includes(port)) {
+					if (csvUrl.includes('proxyip=true')) {
 						proxyIPPool.push(`${ipAddress}:${port}`);
 					}
 
