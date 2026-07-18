@@ -18,7 +18,7 @@ let link;
 let 隧道版本作者 = atob('ZWQ=');
 let 获取代理IP;
 let proxyIPs = [
-	atob('cHJveHlpcC5meHhrLmRlZHluLmlv'),
+	'kr.william.us.ci',
 ];
 let 匹配PROXYIP = [];
 let socks5DataURL = '';
@@ -1247,7 +1247,7 @@ export default {
 					if (port == "-1") port = "80";
 					//console.log(address, port, addressid);
 
-					if (隧道版本作者.trim() === atob('Y21saXU=') && 获取代理IP.trim() === 'true') {
+					if (获取代理IP.trim() === 'true') {
 						// 将addressid转换为小写
 						let lowerAddressid = addressid.toLowerCase();
 						// 初始化找到的proxyIP为null
@@ -1333,7 +1333,7 @@ export default {
 
 				//console.log(address, port, addressid);
 
-				if (隧道版本作者.trim() === atob('Y21saXU=') && 获取代理IP.trim() === 'true') {
+				if (获取代理IP.trim() === 'true') {
 					// 将addressid转换为小写
 					let lowerAddressid = addressid.toLowerCase();
 					// 初始化找到的proxyIP为null
