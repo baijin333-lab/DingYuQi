@@ -131,56 +131,67 @@ async function 整理优选列表(api) {
 }
 
 async function 整理测速结果(tls) {
+	// 参数验证
 	if (!tls) {
 		console.error('TLS参数不能为空');
 		return [];
 	}
+
+	// 检查CSV地址列表
 	if (!Array.isArray(addressescsv) || addressescsv.length === 0) {
 		console.warn('没有可用的CSV地址列表');
 		return [];
 	}
 
+	// CSV解析函数
 	function parseCSV(text) {
 		return text
-			.replace(/\r\n/g, '\n')
-			.replace(/\r/g, '\n')
-			.split('\n')
-			.filter(line => line.trim() !== '')
+			.replace(/\r\n/g, '\n')   // 统一Windows换行
+			.replace(/\r/g, '\n')	 // 处理老Mac换行
+			.split('\n')			   // 按Unix/Linux风格分割
+			.filter(line => line.trim() !== '')  // 移除空行
 			.map(line => line.split(',').map(cell => cell.trim()));
 	}
 
+	// 并行处理CSV
 	const csvPromises = addressescsv.map(async (csvUrl) => {
 		try {
 			const response = await fetch(csvUrl);
-			if (!response.ok) throw new Error(`HTTP错误 ${response.status}`);
+
+			if (!response.ok) {
+				throw new Error(`HTTP错误 ${response.status}: ${response.statusText}`);
+			}
+
 			const text = await response.text();
 			const rows = parseCSV(text);
+
+			// 解构和验证CSV头部
 			const [header, ...dataRows] = rows;
+			const tlsIndex = header.findIndex(col => col.toUpperCase() === 'TLS');
 
-			const speedIndex = header.findIndex(col =>
-				col.toLowerCase().includes('速度') || col.toLowerCase().includes('speed') || col.toLowerCase().includes('下载')
-			);
-			const regionIndex = header.findIndex(col =>
-				col.toLowerCase().includes('地区') || col.toLowerCase().includes('region') || col.toLowerCase().includes('码')
-			);
-			if (speedIndex === -1) throw new Error('CSV缺少速度字段');
-
-			const targetPort = tls.toUpperCase() === 'TRUE' ? '443' : '80';
+			if (tlsIndex === -1) {
+				throw new Error('CSV文件缺少必需的字段');
+			}
 
 			return dataRows
 				.filter(row => {
-					const speed = parseFloat(row[speedIndex]);
-					return !isNaN(speed) && speed > DLS;
+					const tlsValue = row[tlsIndex].toUpperCase();
+					const speed = parseFloat(row[row.length - 1]);
+					return tlsValue === tls.toUpperCase() && speed > DLS;
 				})
 				.map(row => {
 					const ipAddress = row[0];
-					const port = targetPort;
-					const dataCenter = regionIndex !== -1 ? row[regionIndex] : 'UNK';
-					const speed = row[speedIndex];
-					const formattedAddress = `${ipAddress}:${port}#${dataCenter}_${speed}MB/s`;
-					if (csvUrl.includes('proxyip=true') && tls.toUpperCase() === 'FALSE' && !httpsPorts.includes(port)) {
+					const port = row[1];
+					const dataCenter = row[tlsIndex + remarkIndex];
+					const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
+
+					// 处理代理IP池
+					if (csvUrl.includes('proxyip=true') &&
+						row[tlsIndex].toUpperCase() === 'TRUE' &&
+						!httpsPorts.includes(port)) {
 						proxyIPPool.push(`${ipAddress}:${port}`);
 					}
+
 					return formattedAddress;
 				});
 		} catch (error) {
@@ -189,6 +200,7 @@ async function 整理测速结果(tls) {
 		}
 	});
 
+	// 使用Promise.all并行处理并展平结果
 	const results = await Promise.all(csvPromises);
 	return results.flat();
 }
