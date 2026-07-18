@@ -146,9 +146,14 @@ async function 整理测速结果(tls) {
 	// CSV解析函数
 	function parseCSV(text) {
 		return text
-			.replace(/\r\n/g, '\n')   // 统一Windows换行
-			.replace(/\r/g, '\n')	 // 处理老Mac换行
-			.split('\n')			   // 按Unix/Linux风格分割
+			.replace(/
+/g, '
+')   // 统一Windows换行
+			.replace(/
+/g, '
+')	 // 处理老Mac换行
+			.split('
+')			   // 按Unix/Linux风格分割
 			.filter(line => line.trim() !== '')  // 移除空行
 			.map(line => line.split(',').map(cell => cell.trim()));
 	}
@@ -165,29 +170,31 @@ async function 整理测速结果(tls) {
 			const text = await response.text();
 			const rows = parseCSV(text);
 
-			// 解构CSV头部和数据行
+			// 解构和验证CSV头部
 			const [header, ...dataRows] = rows;
 
-			// result_top10_combined.csv 格式：
-			// 表头: IP 地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码 (7列)
-			// 数据: IP 地址,已发送,已接收,丢包率,平均延迟,下载速度(MB/s),地区码,端口 (8列)
+			// 查找列索引
+			const ipIndex = header.findIndex(col => col.includes('IP') || col.includes('ip'));
+			const speedIndex = header.findIndex(col => col.includes('速度') || col.includes('下载'));
+			const dcIndex = header.findIndex(col => col.includes('地区') || col.includes('码'));
+
+			if (ipIndex === -1 || speedIndex === -1) {
+				throw new Error('CSV文件缺少必需的字段(IP地址或下载速度)');
+			}
+
 			return dataRows
 				.filter(row => {
-					// 兼容表头7列、数据8列的情况
-					if (row.length < 7) return false;
-					const speed = parseFloat(row[5]);
-					return !isNaN(speed) && speed > DLS;
+					const speed = parseFloat(row[speedIndex]);
+					return speed > DLS;
 				})
 				.map(row => {
-					const ipAddress = row[0];
-					// 如果数据有8列，端口在第8列(索引7)；如果只有7列，默认端口443
-					const port = row.length >= 8 ? row[7] : '443';
-					const dataCenter = row[6];
-					const speed = parseFloat(row[5]).toFixed(2);
-					const delay = parseFloat(row[4]).toFixed(1);
-					const formattedAddress = `${ipAddress}:${port}#${dataCenter}[${speed}MB/s|${delay}ms]`;
+					const ipAddress = row[ipIndex];
+					const port = '443'; // 端口固定为443
+					const dataCenter = dcIndex !== -1 ? row[dcIndex] : '';
+					const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
 
-					if (csvUrl.includes('proxyip=true')) {
+					// 处理代理IP池
+					if (csvUrl.includes('proxyip=true') && !httpsPorts.includes(port)) {
 						proxyIPPool.push(`${ipAddress}:${port}`);
 					}
 
@@ -203,7 +210,6 @@ async function 整理测速结果(tls) {
 	const results = await Promise.all(csvPromises);
 	return results.flat();
 }
-
 
 async function 整理(内容) {
 	// 将制表符、双引号、单引号和换行符都替换为逗号
