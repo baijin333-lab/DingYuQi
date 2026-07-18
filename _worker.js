@@ -143,12 +143,12 @@ async function 整理测速结果(tls) {
 		return [];
 	}
 
-	// CSV解析函数 - 适配图片中的格式
+	// CSV解析函数
 	function parseCSV(text) {
 		return text
 			.replace(/\r\n/g, '\n')   // 统一Windows换行
-			.replace(/\r/g, '\n')     // 处理老Mac换行
-			.split('\n')               // 按Unix/Linux风格分割
+			.replace(/\r/g, '\n')	 // 处理老Mac换行
+			.split('\n')			   // 按Unix/Linux风格分割
 			.filter(line => line.trim() !== '')  // 移除空行
 			.map(line => line.split(',').map(cell => cell.trim()));
 	}
@@ -167,14 +167,11 @@ async function 整理测速结果(tls) {
 
 			// 解构和验证CSV头部
 			const [header, ...dataRows] = rows;
+			const speedIndex = header.findIndex(col => col.includes('下载速度'));
+			const regionIndex = header.findIndex(col => col.includes('地区码'));
 
-			// 查找列索引 - 适配图片中的表头格式
-			const ipIndex = header.findIndex(col => col.includes('IP') || col.includes('ip') || col.includes('地址'));
-			const speedIndex = header.findIndex(col => col.includes('速度') || col.includes('下载') || col.includes('MB/s'));
-			const dcIndex = header.findIndex(col => col.includes('地区') || col.includes('码') || col.includes('DC'));
-
-			if (ipIndex === -1 || speedIndex === -1) {
-				throw new Error('CSV文件缺少必需的字段(IP地址或下载速度)');
+			if (speedIndex === -1) {
+				throw new Error('CSV文件缺少下载速度字段');
 			}
 
 			return dataRows
@@ -183,13 +180,13 @@ async function 整理测速结果(tls) {
 					return speed > DLS;
 				})
 				.map(row => {
-					const ipAddress = row[ipIndex];
-					const port = '443'; // 端口固定为443
-					const dataCenter = dcIndex !== -1 ? row[dcIndex] : '';
+					const ipAddress = row[0];
+					const port = '443';
+					const dataCenter = regionIndex !== -1 ? row[regionIndex] : '';
 					const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
 
 					// 处理代理IP池
-					if (csvUrl.includes('proxyip=true') && !httpsPorts.includes(port)) {
+					if (csvUrl.includes('proxyip=true')) {
 						proxyIPPool.push(`${ipAddress}:${port}`);
 					}
 
